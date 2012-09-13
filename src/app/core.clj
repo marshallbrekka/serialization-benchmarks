@@ -1,5 +1,6 @@
 (ns app.core
-  (:require [carbonite.api :as api]
+  (:require [clojure.tools.logging :as lg]
+            [carbonite.api :as api]
             [carbonite.buffer :as buffer]
             [cheshire.core :as json]
             [clojurewerkz.spyglass.client :as spyglass]
@@ -14,14 +15,14 @@
         t-end   (nano-time)]
     (double (/ (- t-end t-start) 1000000000))))
 
-(def  mem-conn (spyglass/bin-connection "localhost:2000"))
+(def  mem-conn (spyglass/text-connection "localhost:2000"))
 
 
 (defn set-data [k d]
   (spyglass/set mem-conn k  300 d))
 
 (defn get-data [k]
-  (spyglass/get-multi mem-conn k)) 
+  (count (spyglass/get-multi mem-conn k))) 
 
 (def data [{:type "credit" 
              :id 29384738
@@ -33,7 +34,7 @@
 
 (def registry (api/default-registry))
 
-(def roundtrips 10000)
+(def roundtrips 1)
 (def roundtrips-mem 30)
 
 (defn bench [name f]
@@ -43,11 +44,13 @@
    (flush))
 
 (defn bench-mem [name ser]
-   (let [d (ser data)]
+   (let [d (ser data)
+         ks (map str (take roundtrips-mem (iterate inc 0)))]
    (print name "  ")
    (flush)
    (printf "%.2f" (timed #(dotimes [i roundtrips-mem] (set-data (str i) d))))
-   (printf "   %.2f\n" (timed (get-data (map str (take roundtrips-mem (iterate inc 0))))))
+   (flush)
+   (printf "   %.2f\n" (timed #(get-data ks)))
    (flush)))
 (defn run [] 
 (println "Clojure version: "
