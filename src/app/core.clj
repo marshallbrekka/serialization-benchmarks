@@ -34,8 +34,8 @@
 
 (def registry (api/default-registry))
 
-(def roundtrips 1)
-(def roundtrips-mem 30)
+(def roundtrips 100000)
+(def roundtrips-mem 10000)
 
 (defn bench [name f]
    (print name "  ")
@@ -71,6 +71,7 @@
 
 
 (println "Send/Recieve with memcached")
+(println "num roundtrips " roundtrips-mem)
 (dotimes [i 2]
   (println "Trail: " (inc i))
   (bench-mem "json"
